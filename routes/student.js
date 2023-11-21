@@ -6,16 +6,12 @@ const router = express.Router();
 
 // ROUTE 1: Add a student using POST "/api/student/add". No login requires
 router.post('/add', [
-    body('name', 'Enter a valid name').exists(),
-    body('stream', 'Enter a valid stream!').exists(),
-    body('course', 'Enter a valid course!').exists(),
-    body('semester', 'Enter a valid semester!').exists(),
-    body('rollNo', 'Enter a valid rollNo!').exists(),
-    body('registrationNo', 'Enter a valid registrationNo!').exists(),
-    body('year', 'Enter a valid year!').exists(),
-    body('present', 'Enter a valid present!').exists(),
+    body('name', 'Enter a valid name!').exists(),
+    body('rfid', 'Enter a valid rfid!').exists(),
+    body('event', 'Enter a valid event!').exists(),
+    body('status', 'Enter a valid status!').exists()
 ], async (req, res) => {
-    const { name, stream, course, semester, rollNo, registrationNo, year, present } = req.body;
+    const { name, rfid, event, status } = req.body;
     // If there are errors, return bad request and the errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -24,18 +20,18 @@ router.post('/add', [
     try {
 
         // Check for the student entry already exist
-        const isExist = await StudentModel.findOne({ semester, rollNo, year });
+        const isExist = await StudentModel.findOne({ rfid });
         console.log(isExist);
         // Return if already exist
         if (isExist !== null) {
-            return res.status(400).json({ message: "The given student entry already exist! " });
+            return res.status(400).json({ message: "The given student's entry already exist! " });
         }
 
         // Create the student
         const student = new StudentModel(
-            { name, stream: stream.toUpperCase(), course, semester, rollNo, registrationNo, year, present }
+            { name, rfid, event, status }
         );
-        
+
         const savedStudent = await student.save();
         return res.status(200).json(savedStudent);
 
@@ -50,8 +46,7 @@ router.post('/add', [
 
 // ROUTE 2: Delete a student using POST "/api/student/delete". No login requires
 router.delete('/delete', [
-    body('rollNo', 'Enter a valid rollNo!').exists(),
-    body('year', 'Enter a valid year!').exists(),
+    body('rfid', 'Enter a valid rollNo!').exists()
 ], async (req, res) => {
     // If there are errors, return bad request and the errors
     const errors = validationResult(req);
@@ -59,20 +54,12 @@ router.delete('/delete', [
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { rollNo, year } = req.body;
+    const { rfid } = req.body;
     try {
         // Check for the student entry exist
-        const isExist = await StudentModel.findOne({ year, rollNo });
+        const isExist = await StudentModel.findOneAndDelete({ rfid });
         console.log(isExist);
-        // Return if not exist
-        if (!isExist) {
-            return res.status(400).json({ message: "The given student not exist! " });
-        }
-
-        // Delete the student
-        await StudentModel.findByIdAndDelete({ _id: isExist._id });
         return res.status(200).json(true);
-
 
     } catch (error) {
         console.log(error);
@@ -84,11 +71,11 @@ router.delete('/delete', [
 // ROUTE 3: Update a student using POST "/api/student/update". No login requires
 router.post('/update', async (req, res) => {
 
-    const { name, stream, course, semester, rollNo, registrationNo, year, present } = req.body;
+    const { name, rfid, event, status } = req.body;
 
     try {
         // Check for the student entry exist
-        const student = await StudentModel.findOne({ year, rollNo });
+        const student = await StudentModel.findOne({ rfid });
         console.log(student);
         // Return if not exist
         if (!student) {
@@ -97,13 +84,9 @@ router.post('/update', async (req, res) => {
 
         // Update the student
         student.name = name;
-        student.stream = stream;
-        student.course = course;
-        student.semester = semester;
-        student.rollNo = rollNo;
-        student.registrationNo = registrationNo;
-        student.year = year;
-        student.present = present;
+        student.rfid = rfid;
+        student.event = event;
+        student.status = status;
 
         const savedStudent = await student.save();
 
@@ -119,12 +102,10 @@ router.post('/update', async (req, res) => {
 
 // ROUTE 4: Search a student using POST "/api/student/search". No login requires
 router.post('/search', [
-    body('rollNo', 'Enter a valid rollNo!').exists(),
-    body('year', 'Enter a valid year!').exists(),
-    body('semester', 'Enter a valid year!').exists(),
+    body('rfid', 'Enter a valid rollNo!').exists()
 ], async (req, res) => {
 
-    const { rollNo, year,  semester } = req.body;
+    const { rfid } = req.body;
     // If there are errors, return bad request and the errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -133,7 +114,7 @@ router.post('/search', [
 
     try {
         // Check for the student entry exist
-        const student = await StudentModel.findOne({ year, rollNo, semester });
+        const student = await StudentModel.findOne({ rfid });
 
         // Return if not exist
         if (!student) {
@@ -153,7 +134,7 @@ router.post('/search', [
 // ROUTE 5: Delete all students using DELETE "/api/student/delete-all". No login requires
 router.delete('/delete-all', async (req, res) => {
 
-    
+
     try {
 
         // Delete all the students

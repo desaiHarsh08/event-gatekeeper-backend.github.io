@@ -2,31 +2,20 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const StudentSchema = new Schema({
+  rfid: {
+    type: String,
+  },
   name: {
     type: String,
   },
-  year: {
-    type: Number
-  },
-  rollNo: {
+  event: {
     type: String,
   },
-  registrationNo: {
-    type: String,
-  },
-  stream: {
-    type: String,
-  },
-  course: {
-    type: String,
-  },
-  semester: {
-    type: Number,
-  },
-  present: {
+  status: {
     type: Boolean,
-    default: false
+    default: true
   }
+  
 });
 
 const Student = mongoose.model('students', StudentSchema);

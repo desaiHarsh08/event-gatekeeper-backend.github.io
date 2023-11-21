@@ -9,9 +9,10 @@ router.post('/add', [
     body('name', 'Enter a valid name!').exists(),
     body('rfid', 'Enter a valid rfid!').exists(),
     body('event', 'Enter a valid event!').exists(),
-    body('status', 'Enter a valid status!').exists()
+    body('status', 'Enter a valid status!').exists(),
+    body('attendance', 'Enter a valid attendance!').exists(),
 ], async (req, res) => {
-    const { name, rfid, event, status } = req.body;
+    const { name, rfid, event, status, attendance } = req.body;
     // If there are errors, return bad request and the errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -29,7 +30,7 @@ router.post('/add', [
 
         // Create the student
         const student = new StudentModel(
-            { name, rfid, event, status }
+            { name, rfid, event, status, attendance }
         );
 
         const savedStudent = await student.save();
@@ -71,7 +72,7 @@ router.delete('/delete', [
 // ROUTE 3: Update a student using POST "/api/student/update". No login requires
 router.post('/update', async (req, res) => {
 
-    const { name, rfid, event, status } = req.body;
+    const { name, rfid, event, status, attendance } = req.body;
 
     try {
         // Check for the student entry exist
@@ -87,6 +88,7 @@ router.post('/update', async (req, res) => {
         student.rfid = rfid;
         student.event = event;
         student.status = status;
+        student.attendance = attendance;
 
         const savedStudent = await student.save();
 
@@ -120,8 +122,20 @@ router.post('/search', [
         if (!student) {
             return res.status(404).json({ message: "The given student not exist! " });
         }
+        let obj = {};
+        obj["isAlreadyMarked"]=false
+        if(student.attendance===false){
+            obj["isAlreadyMarked"]=false;
+            student.attendance = true;
+            await student.save();
+        }
+        else{
+            obj["isAlreadyMarked"]=true
+        }
+        obj["student"]=student;
+        console.log(obj)
 
-        return res.status(200).json(student);
+        return res.status(200).json(obj);
 
 
     } catch (error) {
@@ -147,5 +161,24 @@ router.delete('/delete-all', async (req, res) => {
         return res.status(500).json({ error: "Internal Server Error!" });
     }
 });
+
+
+// ROUTE 6: Fetch all students using GET "/api/student/fetch-all". No login requires
+router.get('/fetch-all', async (req, res) => {
+
+
+    try {
+
+        // Fetch all the students
+        const result = await StudentModel.find();
+        return res.status(200).json(result);
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Internal Server Error!" });
+    }
+});
+
 
 export default router;
